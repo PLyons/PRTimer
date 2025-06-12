@@ -9,9 +9,18 @@ import SwiftUI
 
 @main
 struct PRTimerApp: App {
+    @StateObject private var notificationManager = NotificationManager.shared
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(notificationManager)
+                .task {
+                    await notificationManager.checkAuthorizationStatus()
+                    if !notificationManager.isAuthorized {
+                        await notificationManager.requestPermissions()
+                    }
+                }
         }
     }
 }
