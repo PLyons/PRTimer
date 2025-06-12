@@ -10,6 +10,7 @@ import SwiftUI
 struct DaysToggleView: View {
     @ObservedObject var viewModel: CountdownViewModel
     @EnvironmentObject var colorTheme: ColorThemeManager
+    @EnvironmentObject var userSettings: UserSettings
     
     var body: some View {
         VStack(spacing: 6) {
@@ -26,11 +27,11 @@ struct DaysToggleView: View {
     private var toggleButton: some View {
         Button(action: {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                viewModel.toggleDaysDisplay()
+                userSettings.defaultShowWorkingDays.toggle()
             }
         }) {
             HStack(spacing: 12) {
-                Image(systemName: viewModel.showWorkingDays ? "briefcase.fill" : "calendar")
+                Image(systemName: userSettings.defaultShowWorkingDays ? "briefcase.fill" : "calendar")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(colorTheme.accentColor)
                 
@@ -56,13 +57,14 @@ struct DaysToggleView: View {
         }
         .buttonStyle(.plain)
         .scaleEffect(1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.showWorkingDays)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: userSettings.defaultShowWorkingDays)
     }
 }
 
 #Preview {
     DaysToggleView(viewModel: CountdownViewModel())
         .environmentObject(ColorThemeManager())
+        .environmentObject(UserSettings.shared)
         .background(
             LinearGradient(
                 colors: [

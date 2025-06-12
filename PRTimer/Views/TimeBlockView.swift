@@ -16,8 +16,11 @@ struct TimeBlockView: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            // Animated number with particle effects
-            AnimatedNumberView(value: value)
+            // Static number display
+            Text(value)
+                .font(.system(size: 44, weight: .heavy, design: .monospaced))
+                .foregroundColor(colorTheme.currentTheme.primaryTextColor)
+                .shadow(color: colorTheme.currentTheme.textShadowColor, radius: 2, x: 2, y: 2)
                 .frame(height: 50) // Fixed height for number alignment
             
             Text(label)

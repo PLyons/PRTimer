@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct RetirementCelebrationView: View {
+    @EnvironmentObject var userSettings: UserSettings
+    
     var body: some View {
         VStack(spacing: 20) {
             Text("🎉")
@@ -19,7 +21,7 @@ struct RetirementCelebrationView: View {
                     value: UUID()
                 )
             
-            Text("Paul Has Retired!")
+            Text(userSettings.fullCelebrationTitle)
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
@@ -36,6 +38,7 @@ struct RetirementCelebrationView: View {
 
 #Preview {
     RetirementCelebrationView()
+        .environmentObject(UserSettings.shared)
         .background(
             LinearGradient(
                 colors: [

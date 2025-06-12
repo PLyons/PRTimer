@@ -10,69 +10,71 @@ import SwiftUI
 struct FridayCountdownView: View {
     let countdownData: CountdownData
     @EnvironmentObject var colorTheme: ColorThemeManager
+    @State private var isPressed = false
+    @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Enhanced party emoji
-            partyEmojiView
-            
-            VStack(spacing: 4) {
-                // Friday number with enhanced styling
-                fridayNumberView
+        VStack(spacing: 12) {
+            // Friday number with party emoji inline
+            HStack(spacing: 8) {
+                Text("🎉")
+                    .font(.system(size: 36))
                 
-                Text("Fridays Left Until Freedom!")
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                Text("\(countdownData.formattedFridays)")
+                    .font(.system(size: 44, weight: .heavy, design: .monospaced))
                     .foregroundColor(colorTheme.currentTheme.primaryTextColor)
-                    .multilineTextAlignment(.center)
-                    .shadow(color: colorTheme.currentTheme.textShadowColor, radius: 1, x: 1, y: 1)
+                    .shadow(color: colorTheme.currentTheme.textShadowColor, radius: 2, x: 2, y: 2)
+                
+                Text("🎉")
+                    .font(.system(size: 36))
             }
+            .frame(height: 50) // Fixed height for alignment
+            
+            Text("Fridays Left")
+                .font(.system(size: 10, weight: .medium, design: .default))
+                .foregroundColor(colorTheme.currentTheme.secondaryTextColor)
+                .textCase(.uppercase)
+                .tracking(1)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: 30, maxHeight: 40)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, minHeight: 120)
         .background(
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 20)
                 .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(colorTheme.accentColor.opacity(0.4), lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(colorTheme.accentColor.opacity(0.6), lineWidth: 1.5)
                 )
+                .shadow(color: .black.opacity(0.15), radius: 25, x: 0, y: 15)
         )
-        .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
-        .frame(maxWidth: .infinity)
-    }
-    
-    private var partyEmojiView: some View {
-        Text("🎉")
-            .font(.system(size: 28))
-            .padding(12)
-            .background(
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        Circle()
-                            .stroke(colorTheme.accentColor.opacity(0.8), lineWidth: 2.5)
-                    )
-            )
-            .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 6)
-            .breathing(duration: 2.5, scaleRange: 1.0...1.15)
-    }
-    
-    private var fridayNumberView: some View {
-        Text("\(countdownData.formattedFridays)")
-            .font(.system(size: 36, weight: .black, design: .monospaced))
-            .foregroundColor(colorTheme.currentTheme.primaryTextColor)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(colorTheme.accentColor.opacity(0.8), lineWidth: 2)
-                    )
-            )
-            .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
-            .breathing(duration: 4.0, scaleRange: 1.0...1.05)
+        .shimmer(intensity: 0.2, speed: 3.0)
+        .scaleEffect(isPressed ? 0.95 : (isHovered ? 1.02 : 1.0))
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .animation(.easeInOut(duration: 0.2), value: isHovered)
+        .onTapGesture {
+            // Enhanced tap animation with haptic feedback
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+            impactFeedback.impactOccurred()
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                isPressed = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    isPressed = false
+                }
+            }
+        }
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(countdownData.formattedFridays) Fridays Left")
+        .accessibilityHint("Friday countdown component")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 

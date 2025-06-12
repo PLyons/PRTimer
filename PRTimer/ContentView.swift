@@ -8,23 +8,27 @@
         import SwiftUI
 
         struct ContentView: View {
-            @StateObject private var viewModel = CountdownViewModel()
+            @EnvironmentObject var userSettings: UserSettings
             @StateObject private var colorTheme = ColorThemeManager()
             @StateObject private var milestoneManager = MilestoneManager()
             @EnvironmentObject var notificationManager: NotificationManager
             
+            @State private var showingSettings = false
+            @StateObject private var viewModel = CountdownViewModel()
+            
             var body: some View {
-                GeometryReader { geometry in
-                    ZStack {
-                        // Dynamic background with animated overlays
-                        BackgroundView()
-                        
-                        if viewModel.isRetired {
-                            RetirementCelebrationView()
-                        } else {
-                            CountdownLayoutView(geometry: geometry)
+                NavigationView {
+                    GeometryReader { geometry in
+                        ZStack {
+                            // Dynamic background with animated overlays
+                            BackgroundView()
+                            
+                            if viewModel.isRetired {
+                                RetirementCelebrationView()
+                            } else {
+                                CountdownLayoutView(geometry: geometry)
                                 .environmentObject(viewModel)
-                        }
+                            }
                         
                         // Milestone celebration overlay
                         if milestoneManager.showCelebration,
@@ -35,6 +39,19 @@
                             )
                             .environmentObject(colorTheme)
                             .zIndex(1000)
+                            }
+                            
+                        }
+                    }
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button(action: {
+                                showingSettings = true
+                            }) {
+                                Image(systemName: "gearshape.fill")
+                                    .foregroundColor(colorTheme.currentTheme.primaryTextColor)
+                            }
                         }
                     }
                 }
@@ -57,10 +74,17 @@
                 .onDisappear {
                     viewModel.stopUpdating()
                 }
+                .sheet(isPresented: $showingSettings) {
+                    SettingsView()
+                        .environmentObject(userSettings)
+                        .environmentObject(colorTheme)
+                        .environmentObject(notificationManager)
+                }
             }
         }
 
         #Preview {
             ContentView()
+                .environmentObject(UserSettings.shared)
                 .environmentObject(NotificationManager.shared)
         }

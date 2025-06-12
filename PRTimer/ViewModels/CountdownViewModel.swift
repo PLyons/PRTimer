@@ -9,14 +9,18 @@ class CountdownViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var countdownData = CountdownData()
     @Published var isRetired = false
-    @Published var showWorkingDays = true
+    
+    // MARK: - Dependencies
+    private let userSettings: UserSettings
     
     // MARK: - Private Properties
     private var timer: AnyCancellable?
     private let calendar = Calendar(identifier: .gregorian)
     
     // MARK: - Initialization
-    init() {
+    init(userSettings: UserSettings) {
+        self.userSettings = userSettings
+        
         // Delay timer start to ensure proper initialization
         Task {
             await MainActor.run {
@@ -24,6 +28,11 @@ class CountdownViewModel: ObservableObject {
                 startTimer()
             }
         }
+    }
+    
+    // Convenience initializer that uses shared settings
+    convenience init() {
+        self.init(userSettings: UserSettings.shared)
     }
     
     deinit {
@@ -63,22 +72,7 @@ class CountdownViewModel: ObservableObject {
     /// Update the countdown data with current values
     private func updateCountdown() {
         let now = Date()
-        let easternTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
-        
-        // Create retirement datetime: October 10, 2025 at 5:00 PM EDT
-        var retirementComponents = DateComponents()
-        retirementComponents.year = 2025
-        retirementComponents.month = 10
-        retirementComponents.day = 10
-        retirementComponents.hour = 17  // 5:00 PM
-        retirementComponents.minute = 0
-        retirementComponents.second = 0
-        retirementComponents.timeZone = easternTimeZone
-        
-        guard let retirementDateTime = calendar.date(from: retirementComponents) else {
-            handleRetirement()
-            return
-        }
+        let retirementDateTime = userSettings.retirementDate
         
         // Check if retirement time has passed
         if now >= retirementDateTime {
@@ -111,13 +105,12 @@ class CountdownViewModel: ObservableObject {
             minutes: timeComponents.minutes,
             seconds: timeComponents.seconds,
             progress: progressPercentage,
-            showWorkingDays: showWorkingDays
+            showWorkingDays: userSettings.defaultShowWorkingDays
         )
     }
     
     /// Calculate working days remaining from current date
     private func calculateWorkingDaysRemaining(from currentDate: Date, retirementDateTime: Date) -> Int {
-        let easternTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
         let now = currentDate
         
         // If we're past retirement time, return 0
@@ -128,26 +121,26 @@ class CountdownViewModel: ObservableObject {
         // Determine the start date for counting working days
         let startDate: Date
         
-        // Check if current time is past 5 PM today (in Eastern time)
+        // Check if current time is past work day end time today
         let todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
-        var todayAt5PMComponents = todayComponents
-        todayAt5PMComponents.hour = 17
-        todayAt5PMComponents.minute = 0
-        todayAt5PMComponents.second = 0
-        todayAt5PMComponents.timeZone = easternTimeZone
+        var todayAtWorkEndComponents = todayComponents
+        todayAtWorkEndComponents.hour = userSettings.workDayEndHour
+        todayAtWorkEndComponents.minute = userSettings.workDayEndMinute
+        todayAtWorkEndComponents.second = 0
+        todayAtWorkEndComponents.timeZone = userSettings.retirementTimeZone
         
-        guard let todayAt5PM = calendar.date(from: todayAt5PMComponents) else {
-            // Fallback: use start of today if we can't create 5 PM time
+        guard let todayAtWorkEnd = calendar.date(from: todayAtWorkEndComponents) else {
+            // Fallback: use start of today if we can't create work end time
             startDate = calendar.startOfDay(for: now)
             let retirementDay = calendar.startOfDay(for: retirementDateTime)
             return WorkingDaysCalculator.countWorkingDays(from: startDate, to: retirementDay)
         }
         
-        if now >= todayAt5PM && WorkingDaysCalculator.isWorkingDay(now) {
-            // Past 5 PM today and today is a working day - start counting from tomorrow
+        if now >= todayAtWorkEnd && WorkingDaysCalculator.isWorkingDay(now) {
+            // Past work end time today and today is a working day - start counting from tomorrow
             startDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now
         } else {
-            // Before 5 PM today or today is not a working day - count today
+            // Before work end time today or today is not a working day - count today
             startDate = calendar.startOfDay(for: now)
         }
         
@@ -159,16 +152,48 @@ class CountdownViewModel: ObservableObject {
     
     /// Calculate total days remaining from current date
     private func calculateTotalDaysRemaining(from currentDate: Date, retirementDateTime: Date) -> Int {
-        let startDate = calendar.startOfDay(for: currentDate)
-        let retirementDay = calendar.startOfDay(for: retirementDateTime)
+        let now = currentDate
         
+        // If we're past retirement time, return 0
+        if now >= retirementDateTime {
+            return 0
+        }
+        
+        // Determine the start date for counting total days
+        let startDate: Date
+        
+        // Check if current time is past work day end time today
+        let todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        var todayAtWorkEndComponents = todayComponents
+        todayAtWorkEndComponents.hour = userSettings.workDayEndHour
+        todayAtWorkEndComponents.minute = userSettings.workDayEndMinute
+        todayAtWorkEndComponents.second = 0
+        todayAtWorkEndComponents.timeZone = userSettings.retirementTimeZone
+        
+        guard let todayAtWorkEnd = calendar.date(from: todayAtWorkEndComponents) else {
+            // Fallback: use start of today if we can't create work end time
+            startDate = calendar.startOfDay(for: now)
+            let retirementDay = calendar.startOfDay(for: retirementDateTime)
+            let components = calendar.dateComponents([.day], from: startDate, to: retirementDay)
+            return max(components.day ?? 0, 0)
+        }
+        
+        if now >= todayAtWorkEnd {
+            // Past work end time today - start counting from tomorrow
+            startDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now
+        } else {
+            // Before work end time today - count from today
+            startDate = calendar.startOfDay(for: now)
+        }
+        
+        // Count total days from start date up to (but not including) retirement date
+        let retirementDay = calendar.startOfDay(for: retirementDateTime)
         let components = calendar.dateComponents([.day], from: startDate, to: retirementDay)
         return max(components.day ?? 0, 0)
     }
     
     /// Calculate Fridays remaining from current date
     private func calculateFridaysRemaining(from currentDate: Date, retirementDateTime: Date) -> Int {
-        let easternTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
         let now = currentDate
         
         // If we're past retirement time, return 0
@@ -179,16 +204,16 @@ class CountdownViewModel: ObservableObject {
         // Determine the start date for counting Fridays
         let startDate: Date
         
-        // Check if current time is past 5 PM today (in Eastern time)
+        // Check if current time is past work end time today
         let todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
-        var todayAt5PMComponents = todayComponents
-        todayAt5PMComponents.hour = 17
-        todayAt5PMComponents.minute = 0
-        todayAt5PMComponents.second = 0
-        todayAt5PMComponents.timeZone = easternTimeZone
+        var todayAtWorkEndComponents = todayComponents
+        todayAtWorkEndComponents.hour = userSettings.workDayEndHour
+        todayAtWorkEndComponents.minute = userSettings.workDayEndMinute
+        todayAtWorkEndComponents.second = 0
+        todayAtWorkEndComponents.timeZone = userSettings.retirementTimeZone
         
-        guard let todayAt5PM = calendar.date(from: todayAt5PMComponents) else {
-            // Fallback: use start of today if we can't create 5 PM time
+        guard let todayAtWorkEnd = calendar.date(from: todayAtWorkEndComponents) else {
+            // Fallback: use start of today if we can't create work end time
             startDate = calendar.startOfDay(for: now)
             let retirementDay = calendar.startOfDay(for: retirementDateTime)
             return WorkingDaysCalculator.countFridays(from: startDate, to: retirementDay)
@@ -197,11 +222,11 @@ class CountdownViewModel: ObservableObject {
         let weekday = calendar.component(.weekday, from: now)
         let isFriday = (weekday == 6)
         
-        if now >= todayAt5PM && isFriday {
-            // Past 5 PM on Friday - start counting from tomorrow
+        if now >= todayAtWorkEnd && isFriday {
+            // Past work end time on Friday - start counting from tomorrow
             startDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now
         } else {
-            // Before 5 PM or not Friday - count from today
+            // Before work end time or not Friday - count from today
             startDate = calendar.startOfDay(for: now)
         }
         
@@ -213,7 +238,11 @@ class CountdownViewModel: ObservableObject {
     
     /// Calculate progress percentage based on working days completed
     private func calculateProgressPercentage(workingDaysRemaining: Int) -> Double {
-        let totalWorkingDays = RetirementConstants.totalWorkingDays
+        // Calculate total working days from user's start date to retirement date
+        let totalWorkingDays = WorkingDaysCalculator.totalWorkingDays(
+            from: userSettings.startDate,
+            to: userSettings.retirementDate
+        )
         let workingDaysCompleted = totalWorkingDays - workingDaysRemaining
         
         guard totalWorkingDays > 0 else { return 0.0 }
@@ -250,7 +279,7 @@ class CountdownViewModel: ObservableObject {
             seconds: 0,
             progress: 100.0,
             retired: true,
-            showWorkingDays: showWorkingDays
+            showWorkingDays: userSettings.defaultShowWorkingDays
         )
     }
     
@@ -268,11 +297,6 @@ class CountdownViewModel: ObservableObject {
         }
     }
     
-    /// Toggle between showing working days and total days
-    func toggleDaysDisplay() {
-        showWorkingDays.toggle()
-        updateCountdown() // Refresh to update the display
-    }
     
     /// Get debug information about the countdown
     func getDebugInfo() -> String {
@@ -294,10 +318,16 @@ class CountdownViewModel: ObservableObject {
         
         let retirementDate = Calendar.current.date(from: retirementComponents) ?? Date()
         
+        let totalWorkingDays = WorkingDaysCalculator.totalWorkingDays(
+            from: userSettings.startDate,
+            to: userSettings.retirementDate
+        )
+        
         return """
         Current Time: \(formatter.string(from: now))
+        Start Date: \(formatter.string(from: userSettings.startDate))
         Retirement Date: \(formatter.string(from: retirementDate))
-        Total Working Days: \(RetirementConstants.totalWorkingDays)
+        Total Working Days: \(totalWorkingDays)
         Working Days Remaining: \(countdownData.workingDaysRemaining)
         Progress: \(countdownData.formattedProgress)
         Is Today Working Day: \(WorkingDaysCalculator.isTodayAWorkingDay())

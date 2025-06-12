@@ -11,10 +11,11 @@ struct CountdownLayoutView: View {
     let geometry: GeometryProxy
     @EnvironmentObject var viewModel: CountdownViewModel
     @EnvironmentObject var colorTheme: ColorThemeManager
+    @EnvironmentObject var userSettings: UserSettings
     
     var body: some View {
         ScrollView {
-            VStack(spacing: geometry.size.height > 700 ? 25 : 12) {
+            VStack(spacing: geometry.size.height > 700 ? 15 : 8) {
                 // Title section with theme indicator
                 HeaderView()
                 
@@ -22,17 +23,21 @@ struct CountdownLayoutView: View {
                 CountdownGridView(countdownData: viewModel.countdownData)
                     .frame(height: geometry.size.width > geometry.size.height ? 120 : 280)
                 
-                // Toggle button for days display
-                DaysToggleView(viewModel: viewModel)
-                    .padding(.top, -8)
-                
                 // Fridays counter with dynamic color
                 FridayCountdownView(countdownData: viewModel.countdownData)
-                    .padding(.top, -8)
+                    .padding(.top, -12)
                 
-                // Progress bar with dynamic colors
-                //ProgressBarView(progress: viewModel.countdownData.progressPercentage)
-                //    .padding(.horizontal, 20)
+                // Career Timeline section
+                VStack(spacing: 8) {
+                    Text("Career Timeline")
+                        .font(.headline)
+                        .foregroundColor(colorTheme.currentTheme.primaryTextColor)
+                        .padding(.top, 20)
+                    
+                    // Progress bar with dynamic colors
+                    ProgressBarView(progress: viewModel.countdownData.progressPercentage)
+                        .padding(.horizontal, 20)
+                }
                 
                 // Test celebration button (for demonstration)
                 //Button("🎉 Test Celebration") {
@@ -43,13 +48,13 @@ struct CountdownLayoutView: View {
                 //.padding(.top, 10)
                 
                 if geometry.size.height < 700 {
-                    Spacer(minLength: 20)
+                    Spacer(minLength: 10)
                 } else {
-                    Spacer()
+                    Spacer(minLength: 20)
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.top, geometry.safeAreaInsets.top + 20)
+            .padding(.top, 10)
         }
     }
 }
@@ -59,6 +64,7 @@ struct CountdownLayoutView: View {
         CountdownLayoutView(geometry: geometry)
             .environmentObject(CountdownViewModel())
             .environmentObject(ColorThemeManager())
+            .environmentObject(UserSettings.shared)
     }
     .background(
         LinearGradient(

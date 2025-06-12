@@ -37,7 +37,6 @@ struct ProgressBarView: View {
                     .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
                     .animation(.easeInOut(duration: 1.0), value: animatedProgress)
             }
-            .breathing(duration: 5.0, scaleRange: 1.0...1.02)
             
             // Progress percentage text with enhanced styling
             Text(String(format: "%.1f%% Complete", progress))
