@@ -75,28 +75,30 @@ class UserSettings: ObservableObject {
         subtitleMessage = "The final stretch to freedom!"
         celebrationTitle = "has retired!"
         
-        // Set timezone first since dates depend on it
-        retirementTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
+        // Use local timezone variable for initialization
+        let defaultTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
         
-        // Default start date: January 1, 2000, 8:00 AM in the retirement timezone
+        // Default start date: January 1, 2000, 8:00 AM in Eastern timezone
         var startComponents = DateComponents()
         startComponents.year = 2000
         startComponents.month = 1
         startComponents.day = 1
         startComponents.hour = 8
         startComponents.minute = 0
-        startComponents.timeZone = retirementTimeZone
+        startComponents.timeZone = defaultTimeZone
         startDate = Calendar.current.date(from: startComponents) ?? Date()
         
-        // Default retirement date: October 10, 2025, 5:00 PM in the retirement timezone
+        // Default retirement date: October 10, 2025, 5:00 PM in Eastern timezone
         var retirementComponents = DateComponents()
         retirementComponents.year = 2025
         retirementComponents.month = 10
         retirementComponents.day = 10
         retirementComponents.hour = 17
         retirementComponents.minute = 0
-        retirementComponents.timeZone = retirementTimeZone
+        retirementComponents.timeZone = defaultTimeZone
         retirementDate = Calendar.current.date(from: retirementComponents) ?? Date()
+        
+        retirementTimeZone = defaultTimeZone
         workDayEndHour = 17
         workDayEndMinute = 0
         
