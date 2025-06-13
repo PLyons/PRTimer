@@ -11,58 +11,109 @@ import SwiftUI
 @MainActor
 class UserSettings: ObservableObject {
     
+    // MARK: - Private Properties
+    private var isInitializing = true
+    
     // MARK: - Published Properties
     
     // Personal Information
     @Published var retireeName: String {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var subtitleMessage: String {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var celebrationTitle: String {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     // Date & Time Settings
     @Published var startDate: Date {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var retirementDate: Date {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var retirementTimeZone: TimeZone {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var workDayEndHour: Int {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var workDayEndMinute: Int {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     // Notification Settings
     @Published var notificationsEnabled: Bool {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var notificationHour: Int {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     @Published var notificationMinute: Int {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     // Display Preferences
     @Published var defaultShowWorkingDays: Bool {
-        didSet { saveToUserDefaults() }
+        didSet { 
+            if !isInitializing {
+                saveToUserDefaults() 
+            }
+        }
     }
     
     // MARK: - Singleton
@@ -110,6 +161,9 @@ class UserSettings: ObservableObject {
         
         // Load saved settings
         loadFromUserDefaults()
+        
+        // Mark initialization as complete
+        isInitializing = false
     }
     
     // MARK: - Computed Properties
