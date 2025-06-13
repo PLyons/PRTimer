@@ -13,6 +13,7 @@ class UserSettings: ObservableObject {
     
     // MARK: - Private Properties
     private var isInitializing = true
+    private var hasLoadedFromDefaults = false
     
     // MARK: - Published Properties
     
@@ -44,7 +45,7 @@ class UserSettings: ObservableObject {
     // Date & Time Settings
     @Published var startDate: Date {
         didSet { 
-            if !isInitializing {
+            if !isInitializing && hasLoadedFromDefaults {
                 saveToUserDefaults() 
             }
         }
@@ -162,7 +163,8 @@ class UserSettings: ObservableObject {
         // Load saved settings
         loadFromUserDefaults()
         
-        // Mark initialization as complete
+        // Mark loading and initialization as complete
+        hasLoadedFromDefaults = true
         isInitializing = false
     }
     
