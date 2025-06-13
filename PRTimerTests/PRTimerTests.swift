@@ -116,34 +116,36 @@ struct PRTimerTests {
         UserDefaults.standard.synchronize()
         
         // Verify all defaults are restored
-        #expect(settings.retireeName == "Paul", "Name should reset to default")
+        #expect(settings.retireeName == "Your Name", "Name should reset to placeholder default")
         #expect(settings.subtitleMessage == "The final stretch to freedom!", "Subtitle should reset to default")
         #expect(settings.celebrationTitle == "has retired!", "Celebration title should reset to default")
         
-        // Check date defaults
+        // Check smart date defaults (dynamic based on current year)
+        let currentYear = Calendar.current.component(.year, from: Date())
+        
         var expectedStartComponents = DateComponents()
-        expectedStartComponents.year = 2000
+        expectedStartComponents.year = currentYear - 5
         expectedStartComponents.month = 1
         expectedStartComponents.day = 1
         expectedStartComponents.hour = 8
         expectedStartComponents.minute = 0
-        expectedStartComponents.timeZone = TimeZone(identifier: "America/New_York")
+        expectedStartComponents.timeZone = TimeZone.current
         let expectedStartDate = Calendar.current.date(from: expectedStartComponents)
         
         var expectedRetirementComponents = DateComponents()
-        expectedRetirementComponents.year = 2025
-        expectedRetirementComponents.month = 10
-        expectedRetirementComponents.day = 10
+        expectedRetirementComponents.year = (currentYear - 5) + 30  // 30-year career
+        expectedRetirementComponents.month = 12
+        expectedRetirementComponents.day = 31
         expectedRetirementComponents.hour = 17
         expectedRetirementComponents.minute = 0
-        expectedRetirementComponents.timeZone = TimeZone(identifier: "America/New_York")
+        expectedRetirementComponents.timeZone = TimeZone.current
         let expectedRetirementDate = Calendar.current.date(from: expectedRetirementComponents)
         
-        #expect(Calendar.current.isDate(settings.startDate, inSameDayAs: expectedStartDate ?? Date()), "Start date should reset to Jan 1, 2000")
-        #expect(Calendar.current.isDate(settings.retirementDate, inSameDayAs: expectedRetirementDate ?? Date()), "Retirement date should reset to Oct 10, 2025")
+        #expect(Calendar.current.isDate(settings.startDate, inSameDayAs: expectedStartDate ?? Date()), "Start date should reset to smart default (5 years ago)")
+        #expect(Calendar.current.isDate(settings.retirementDate, inSameDayAs: expectedRetirementDate ?? Date()), "Retirement date should reset to smart default (30-year career)")
         
-        // Check timezone
-        #expect(settings.retirementTimeZone.identifier == "America/New_York", "Timezone should reset to Eastern")
+        // Check timezone (should use device timezone)
+        #expect(settings.retirementTimeZone.identifier == TimeZone.current.identifier, "Timezone should reset to device timezone")
         
         // Check work settings
         #expect(settings.workDayEndHour == 17, "Work day end hour should reset to 17")
@@ -176,14 +178,14 @@ struct PRTimerTests {
         settings.resetToDefaults()
         UserDefaults.standard.synchronize()
         
-        // Verify UserDefaults now contain default values
-        #expect(UserDefaults.standard.string(forKey: "retireeName") == "Paul")
+        // Verify UserDefaults now contain smart default values
+        #expect(UserDefaults.standard.string(forKey: "retireeName") == "Your Name")
         #expect(UserDefaults.standard.integer(forKey: "workDayEndHour") == 17)
         #expect(UserDefaults.standard.bool(forKey: "notificationsEnabled") == true)
     }
     
     @Test @MainActor func testNewUserDefaults() async throws {
-        // Simulate completely new user by clearing all UserDefaults
+        // First clear UserDefaults and reset settings to simulate new user
         let allKeys = ["retireeName", "subtitleMessage", "celebrationTitle", "startDate", "retirementDate", "retirementTimeZone", "workDayEndHour", "workDayEndMinute", "notificationsEnabled", "notificationHour", "notificationMinute", "defaultShowWorkingDays"]
         
         for key in allKeys {
@@ -191,27 +193,28 @@ struct PRTimerTests {
         }
         UserDefaults.standard.synchronize()
         
-        // This simulates what a brand new user would see
-        // Note: We can't easily test this with the singleton, but we can verify the defaults
+        // Reset the singleton to defaults to simulate fresh initialization
         let settings = UserSettings.shared
+        settings.resetToDefaults()  // This will set the smart defaults
         
-        // These should be the default values a new user sees
-        #expect(settings.retireeName == "Paul", "Default name should be appropriate for new users")
+        // These should be the smart default values a new user sees
+        #expect(settings.retireeName == "Your Name", "Default name should prompt for personalization")
         #expect(settings.subtitleMessage == "The final stretch to freedom!", "Default subtitle should be motivational")
         #expect(settings.notificationsEnabled == true, "Notifications should be enabled by default")
         #expect(settings.workDayEndHour == 17, "Default work day should end at 5 PM")
         #expect(settings.defaultShowWorkingDays == true, "Should show working days by default")
         
-        // Check that timezone defaults to Eastern (which may not be ideal for all users)
-        #expect(settings.retirementTimeZone.identifier == "America/New_York", "Defaults to Eastern timezone")
+        // Check that timezone uses device timezone (better localization)
+        #expect(settings.retirementTimeZone.identifier == TimeZone.current.identifier, "Should use device timezone")
         
-        // Check that dates are set to specific values (which may not be ideal)
+        // Check that dates are set to smart dynamic values
         let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
         let startYear = calendar.component(.year, from: settings.startDate)
         let retirementYear = calendar.component(.year, from: settings.retirementDate)
         
-        #expect(startYear == 2000, "Default start year is 2000")
-        #expect(retirementYear == 2025, "Default retirement year is 2025 (may be outdated)")
+        #expect(startYear == currentYear - 5, "Default start year should be 5 years ago")
+        #expect(retirementYear == (currentYear - 5) + 30, "Default retirement year should be 30-year career from start")
     }
 
 }

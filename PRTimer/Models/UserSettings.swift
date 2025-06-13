@@ -122,17 +122,21 @@ class UserSettings: ObservableObject {
     
     // MARK: - Initialization
     private init() {
-        // Initialize with defaults, then load from UserDefaults
-        retireeName = "Paul"
+        // Initialize with smart defaults, then load from UserDefaults
+        retireeName = "Your Name"
         subtitleMessage = "The final stretch to freedom!"
         celebrationTitle = "has retired!"
         
-        // Use local timezone variable for initialization
-        let defaultTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
+        // Use user's current timezone for better localization
+        let defaultTimeZone = TimeZone.current
         
-        // Default start date: January 1, 2000, 8:00 AM in Eastern timezone
+        // Smart default start date: 5 years ago from today
+        let currentDate = Date()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: currentDate)
+        
         var startComponents = DateComponents()
-        startComponents.year = 2000
+        startComponents.year = currentYear - 5
         startComponents.month = 1
         startComponents.day = 1
         startComponents.hour = 8
@@ -140,11 +144,11 @@ class UserSettings: ObservableObject {
         startComponents.timeZone = defaultTimeZone
         startDate = Calendar.current.date(from: startComponents) ?? Date()
         
-        // Default retirement date: October 10, 2025, 5:00 PM in Eastern timezone
+        // Smart default retirement date: 30 years from career start (typical career length)
         var retirementComponents = DateComponents()
-        retirementComponents.year = 2025
-        retirementComponents.month = 10
-        retirementComponents.day = 10
+        retirementComponents.year = (currentYear - 5) + 30  // 30-year career from start
+        retirementComponents.month = 12
+        retirementComponents.day = 31
         retirementComponents.hour = 17
         retirementComponents.minute = 0
         retirementComponents.timeZone = defaultTimeZone
@@ -307,16 +311,20 @@ class UserSettings: ObservableObject {
     // MARK: - Reset to Defaults
     
     func resetToDefaults() {
-        retireeName = "Paul"
+        retireeName = "Your Name"
         subtitleMessage = "The final stretch to freedom!"
         celebrationTitle = "has retired!"
         
-        // Reset timezone first since dates depend on it
-        retirementTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
+        // Reset to user's current timezone for better localization
+        retirementTimeZone = TimeZone.current
         
-        // Default start date: January 1, 2000, 8:00 AM in the retirement timezone
+        // Smart default start date: 5 years ago from today
+        let currentDate = Date()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: currentDate)
+        
         var startComponents = DateComponents()
-        startComponents.year = 2000
+        startComponents.year = currentYear - 5
         startComponents.month = 1
         startComponents.day = 1
         startComponents.hour = 8
@@ -324,11 +332,11 @@ class UserSettings: ObservableObject {
         startComponents.timeZone = retirementTimeZone
         startDate = Calendar.current.date(from: startComponents) ?? Date()
         
-        // Default retirement date: October 10, 2025, 5:00 PM in the retirement timezone
+        // Smart default retirement date: 30 years from career start (typical career length)
         var retirementComponents = DateComponents()
-        retirementComponents.year = 2025
-        retirementComponents.month = 10
-        retirementComponents.day = 10
+        retirementComponents.year = (currentYear - 5) + 30  // 30-year career from start
+        retirementComponents.month = 12
+        retirementComponents.day = 31
         retirementComponents.hour = 17
         retirementComponents.minute = 0
         retirementComponents.timeZone = retirementTimeZone
