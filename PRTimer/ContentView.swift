@@ -12,6 +12,7 @@
             @StateObject private var colorTheme = ColorThemeManager()
             @StateObject private var milestoneManager = MilestoneManager()
             @EnvironmentObject var notificationManager: NotificationManager
+            @Environment(\.scenePhase) private var scenePhase
             
             @State private var showingSettings = false
             @StateObject private var viewModel = CountdownViewModel()
@@ -73,6 +74,17 @@
                 }
                 .onDisappear {
                     viewModel.stopUpdating()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    switch phase {
+                    case .active:
+                        viewModel.refreshCountdown()
+                        viewModel.restartTimer()
+                    case .background, .inactive:
+                        break
+                    @unknown default:
+                        break
+                    }
                 }
                 .sheet(isPresented: $showingSettings) {
                     SettingsView()

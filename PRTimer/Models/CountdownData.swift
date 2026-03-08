@@ -144,6 +144,6 @@ extension CountdownData {
     
     /// Get formatted percentage string
     var formattedProgress: String {
-        return String(format: "%.1f%%", progressPercentage)
+        return String(format: "%.2f%%", progressPercentage)
     }
 }

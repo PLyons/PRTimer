@@ -15,11 +15,21 @@ class CountdownViewModel: ObservableObject {
     
     // MARK: - Private Properties
     private var timer: AnyCancellable?
+    private var foregroundObserver: AnyCancellable?
     private let calendar = Calendar(identifier: .gregorian)
     
     // MARK: - Initialization
     init(userSettings: UserSettings) {
         self.userSettings = userSettings
+        
+        // Set up foreground notification observer
+        foregroundObserver = NotificationCenter.default
+            .publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.refreshCountdown()
+                }
+            }
         
         // Delay timer start to ensure proper initialization
         Task {
@@ -38,6 +48,8 @@ class CountdownViewModel: ObservableObject {
     deinit {
         timer?.cancel()
         timer = nil
+        foregroundObserver?.cancel()
+        foregroundObserver = nil
     }
     
     // MARK: - Timer Management
