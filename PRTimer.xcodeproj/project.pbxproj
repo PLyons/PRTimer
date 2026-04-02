@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A38D25592F7F0BF50052ACC1 /* REFACTORING_PLAN.md in Resources */ = {isa = PBXBuildFile; fileRef = A38D25582F7F0BF50052ACC1 /* REFACTORING_PLAN.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		DAD776202DF1FFCE005EB320 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A38D25582F7F0BF50052ACC1 /* REFACTORING_PLAN.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = REFACTORING_PLAN.md; sourceTree = "<group>"; };
 		DAD776122DF1FFCD005EB320 /* PRTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PRTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DAD7761F2DF1FFCE005EB320 /* PRTimerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PRTimerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DAD776292DF1FFCE005EB320 /* PRTimerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PRTimerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,6 +84,7 @@
 				DAD776222DF1FFCE005EB320 /* PRTimerTests */,
 				DAD7762C2DF1FFCE005EB320 /* PRTimerUITests */,
 				DAD776132DF1FFCD005EB320 /* Products */,
+				A38D25582F7F0BF50052ACC1 /* REFACTORING_PLAN.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A38D25592F7F0BF50052ACC1 /* REFACTORING_PLAN.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
