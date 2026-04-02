@@ -88,7 +88,7 @@ class NotificationManager: ObservableObject {
     /// Schedule major milestone notifications (100, 90, 80, etc. days)
     private func scheduleMajorMilestones() async {
         let majorMilestones = [100, 90, 80, 70, 60, 50, 40, 30, 25, 20, 15, 10, 5, 1]
-        let retirementDate = RetirementConstants.retirementDate
+        let retirementDate = UserSettings.shared.retirementDate
         let calendar = Calendar(identifier: .gregorian)
         
         for daysRemaining in majorMilestones {
@@ -131,7 +131,7 @@ class NotificationManager: ObservableObject {
     
     /// Schedule weekly milestone notifications (every 10 days)
     private func scheduleWeeklyMilestones() async {
-        let retirementDate = RetirementConstants.retirementDate
+        let retirementDate = UserSettings.shared.retirementDate
         let calendar = Calendar(identifier: .gregorian)
         
         // Calculate total days until retirement
@@ -182,7 +182,7 @@ class NotificationManager: ObservableObject {
     /// Schedule Friday countdown milestone notifications
     private func scheduleFridayCountdownMilestones() async {
         let fridayMilestones = [20, 15, 10, 5, 1]
-        let retirementDate = RetirementConstants.retirementDate
+        let retirementDate = UserSettings.shared.retirementDate
         let calendar = Calendar(identifier: .gregorian)
         
         // Calculate total Fridays until retirement

@@ -39,62 +39,6 @@ struct CountdownData {
     }
 }
 
-/// Constants for the retirement countdown
-struct RetirementConstants {
-    /// The target retirement date and time: October 10, 2025, 5:00 PM EDT
-    static let retirementDate: Date = {
-        var components = DateComponents()
-        components.timeZone = TimeZone(identifier: "America/New_York")
-        components.year = 2025
-        components.month = 10
-        components.day = 10
-        components.hour = 17  // 5:00 PM
-        components.minute = 0
-        components.second = 0
-        
-        let calendar = Calendar(identifier: .gregorian)
-        return calendar.date(from: components) ?? Date.distantFuture
-    }()
-    
-    /// The start of the countdown period (beginning of 2025)
-    static let countdownStartDate: Date = {
-        var components = DateComponents()
-        components.timeZone = TimeZone(identifier: "America/New_York")
-        components.year = 2025
-        components.month = 1
-        components.day = 1
-        components.hour = 0
-        components.minute = 0
-        components.second = 0
-        
-        let calendar = Calendar(identifier: .gregorian)
-        return calendar.date(from: components) ?? Date.distantPast
-    }()
-    
-    /// The end date for working days calculation (October 10, 2025 at end of day)
-    static let workingDaysEndDate: Date = {
-        var components = DateComponents()
-        components.timeZone = TimeZone(identifier: "America/New_York")
-        components.year = 2025
-        components.month = 10
-        components.day = 10
-        components.hour = 23
-        components.minute = 59
-        components.second = 59
-        
-        let calendar = Calendar(identifier: .gregorian)
-        return calendar.date(from: components) ?? Date.distantFuture
-    }()
-    
-    /// Total working days from start of year to retirement (for progress calculation)
-    static let totalWorkingDays: Int = {
-        return WorkingDaysCalculator.totalWorkingDays(
-            from: countdownStartDate,
-            to: workingDaysEndDate
-        )
-    }()
-}
-
 /// Helper extension for formatting countdown values
 extension CountdownData {
     /// Get formatted string for working days

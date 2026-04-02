@@ -30,7 +30,7 @@ struct LaunchOptimizer {
     private static func precomputeRetirementData() async {
         // Pre-calculate common date computations
         let calendar = Calendar.current
-        let retirementDate = RetirementConstants.retirementDate
+        let retirementDate = await MainActor.run { UserSettings.shared.retirementDate }
         let now = Date()
         
         // Cache working days calculation

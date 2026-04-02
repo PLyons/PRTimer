@@ -4,7 +4,7 @@ import Foundation
 struct WorkingDaysCalculator {
     
     private static let calendar = Calendar(identifier: .gregorian)
-    private static let easternTimeZone = TimeZone(identifier: "America/New_York")!
+    private static let easternTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
     
     /// Count working days between two dates (exclusive of start date, inclusive of end date)
     /// Excludes weekends and federal holidays

@@ -323,29 +323,17 @@ class CountdownViewModel: ObservableObject {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .medium
-        formatter.timeZone = TimeZone(identifier: "America/New_York")
-        
-        let easternTimeZone = TimeZone(identifier: "America/New_York") ?? TimeZone.current
-        var retirementComponents = DateComponents()
-        retirementComponents.year = 2025
-        retirementComponents.month = 10
-        retirementComponents.day = 10
-        retirementComponents.hour = 17
-        retirementComponents.minute = 0
-        retirementComponents.second = 0
-        retirementComponents.timeZone = easternTimeZone
-        
-        let retirementDate = Calendar.current.date(from: retirementComponents) ?? Date()
-        
+        formatter.timeZone = userSettings.retirementTimeZone
+
         let totalWorkingDays = WorkingDaysCalculator.totalWorkingDays(
             from: userSettings.startDate,
             to: userSettings.retirementDate
         )
-        
+
         return """
         Current Time: \(formatter.string(from: now))
         Start Date: \(formatter.string(from: userSettings.startDate))
-        Retirement Date: \(formatter.string(from: retirementDate))
+        Retirement Date: \(formatter.string(from: userSettings.retirementDate))
         Total Working Days: \(totalWorkingDays)
         Working Days Remaining: \(countdownData.workingDaysRemaining)
         Progress: \(countdownData.formattedProgress)

@@ -75,7 +75,9 @@
                     case .active:
                         viewModel.refreshCountdown()
                         viewModel.restartTimer()
-                    case .background, .inactive:
+                    case .background:
+                        viewModel.stopUpdating()
+                    case .inactive:
                         break
                     @unknown default:
                         break
