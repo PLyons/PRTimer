@@ -10,10 +10,9 @@
         struct ContentView: View {
             @EnvironmentObject var userSettings: UserSettings
             @StateObject private var colorTheme = ColorThemeManager()
-            @StateObject private var milestoneManager = MilestoneManager()
             @EnvironmentObject var notificationManager: NotificationManager
             @Environment(\.scenePhase) private var scenePhase
-            
+
             @State private var showingSettings = false
             @StateObject private var viewModel = CountdownViewModel()
             
@@ -32,11 +31,14 @@
                             }
                         
                         // Milestone celebration overlay
-                        if milestoneManager.showCelebration,
-                           let milestone = milestoneManager.currentMilestone {
+                        if viewModel.milestoneManager.showCelebration,
+                           let milestone = viewModel.milestoneManager.currentMilestone {
                             CelebrationOverlay(
                                 milestone: milestone,
-                                isShowing: $milestoneManager.showCelebration
+                                isShowing: Binding(
+                                    get: { viewModel.milestoneManager.showCelebration },
+                                    set: { viewModel.milestoneManager.showCelebration = $0 }
+                                )
                             )
                             .environmentObject(colorTheme)
                             .zIndex(1000)
@@ -57,14 +59,7 @@
                     }
                 }
                 .environmentObject(colorTheme)
-                .environmentObject(milestoneManager)
-                .onReceive(viewModel.$countdownData) { data in
-                    // Check for milestones whenever countdown data updates
-                    milestoneManager.checkForMilestones(
-                        totalDays: data.workingDaysRemaining,
-                        fridaysLeft: data.fridaysRemaining
-                    )
-                }
+                .environmentObject(viewModel.milestoneManager)
                 .onAppear {
                     viewModel.startUpdating()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

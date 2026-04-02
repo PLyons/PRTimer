@@ -9,9 +9,10 @@ class CountdownViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var countdownData = CountdownData()
     @Published var isRetired = false
-    
+
     // MARK: - Dependencies
     private let userSettings: UserSettings
+    let milestoneManager = MilestoneManager()
     
     // MARK: - Private Properties
     private var timer: AnyCancellable?
@@ -108,6 +109,12 @@ class CountdownViewModel: ObservableObject {
         // Calculate progress percentage
         let progressPercentage = calculateProgressPercentage(workingDaysRemaining: workingDaysRemaining)
         
+        // Check for milestones (business logic belongs in the ViewModel, not the View)
+        milestoneManager.checkForMilestones(
+            totalDays: workingDaysRemaining,
+            fridaysLeft: fridaysRemaining
+        )
+
         // Update the countdown data
         countdownData = CountdownData(
             workingDays: workingDaysRemaining,

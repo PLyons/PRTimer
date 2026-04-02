@@ -13,7 +13,7 @@ class UserSettings: ObservableObject {
     
     // MARK: - Private Properties
     private var isInitializing = true
-    private var hasLoadedFromDefaults = false
+    private let repository = UserSettingsRepository()
     
     // MARK: - Published Properties
     
@@ -45,7 +45,7 @@ class UserSettings: ObservableObject {
     // Date & Time Settings
     @Published var startDate: Date {
         didSet { 
-            if !isInitializing && hasLoadedFromDefaults {
+            if !isInitializing {
                 saveToUserDefaults() 
             }
         }
@@ -129,31 +129,9 @@ class UserSettings: ObservableObject {
         
         // Use user's current timezone for better localization
         let defaultTimeZone = TimeZone.current
-        
-        // Smart default start date: 5 years ago from today
-        let currentDate = Date()
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: currentDate)
-        
-        var startComponents = DateComponents()
-        startComponents.year = currentYear - 5
-        startComponents.month = 1
-        startComponents.day = 1
-        startComponents.hour = 8
-        startComponents.minute = 0
-        startComponents.timeZone = defaultTimeZone
-        startDate = Calendar.current.date(from: startComponents) ?? Date()
-        
-        // Smart default retirement date: 30 years from career start (typical career length)
-        var retirementComponents = DateComponents()
-        retirementComponents.year = (currentYear - 5) + 30  // 30-year career from start
-        retirementComponents.month = 12
-        retirementComponents.day = 31
-        retirementComponents.hour = 17
-        retirementComponents.minute = 0
-        retirementComponents.timeZone = defaultTimeZone
-        retirementDate = Calendar.current.date(from: retirementComponents) ?? Date()
-        
+        let dates = Self.defaultDates(timezone: defaultTimeZone)
+        startDate = dates.start
+        retirementDate = dates.retirement
         retirementTimeZone = defaultTimeZone
         workDayEndHour = 17
         workDayEndMinute = 0
@@ -167,11 +145,40 @@ class UserSettings: ObservableObject {
         // Load saved settings
         loadFromUserDefaults()
         
-        // Mark loading and initialization as complete
-        hasLoadedFromDefaults = true
+        // Mark initialization as complete
         isInitializing = false
     }
     
+    // MARK: - Private Helpers
+
+    /// Calculates the smart default start and retirement dates relative to today.
+    /// Used by both init() and resetToDefaults() to avoid duplicated logic.
+    private static func defaultDates(timezone: TimeZone) -> (start: Date, retirement: Date) {
+        let currentDate = Date()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: currentDate)
+
+        var startComponents = DateComponents()
+        startComponents.year = currentYear - 5
+        startComponents.month = 1
+        startComponents.day = 1
+        startComponents.hour = 8
+        startComponents.minute = 0
+        startComponents.timeZone = timezone
+        let start = calendar.date(from: startComponents) ?? currentDate
+
+        var retirementComponents = DateComponents()
+        retirementComponents.year = (currentYear - 5) + 30
+        retirementComponents.month = 12
+        retirementComponents.day = 31
+        retirementComponents.hour = 17
+        retirementComponents.minute = 0
+        retirementComponents.timeZone = timezone
+        let retirement = calendar.date(from: retirementComponents) ?? currentDate
+
+        return (start, retirement)
+    }
+
     // MARK: - Computed Properties
     
     /// Full countdown title combining name with "Retirement Countdown"
@@ -220,92 +227,38 @@ class UserSettings: ObservableObject {
         notificationMinute >= 0 && notificationMinute <= 59
     }
     
-    // MARK: - UserDefaults Keys
-    private enum UserDefaultsKeys {
-        static let retireeName = "retireeName"
-        static let subtitleMessage = "subtitleMessage"
-        static let celebrationTitle = "celebrationTitle"
-        static let startDate = "startDate"
-        static let retirementDate = "retirementDate"
-        static let retirementTimeZone = "retirementTimeZone"
-        static let workDayEndHour = "workDayEndHour"
-        static let workDayEndMinute = "workDayEndMinute"
-        static let notificationsEnabled = "notificationsEnabled"
-        static let notificationHour = "notificationHour"
-        static let notificationMinute = "notificationMinute"
-        static let defaultShowWorkingDays = "defaultShowWorkingDays"
-    }
-    
     // MARK: - Persistence
-    
+
     private func saveToUserDefaults() {
-        let defaults = UserDefaults.standard
-        
-        defaults.set(retireeName, forKey: UserDefaultsKeys.retireeName)
-        defaults.set(subtitleMessage, forKey: UserDefaultsKeys.subtitleMessage)
-        defaults.set(celebrationTitle, forKey: UserDefaultsKeys.celebrationTitle)
-        defaults.set(startDate, forKey: UserDefaultsKeys.startDate)
-        defaults.set(retirementDate, forKey: UserDefaultsKeys.retirementDate)
-        defaults.set(retirementTimeZone.identifier, forKey: UserDefaultsKeys.retirementTimeZone)
-        defaults.set(workDayEndHour, forKey: UserDefaultsKeys.workDayEndHour)
-        defaults.set(workDayEndMinute, forKey: UserDefaultsKeys.workDayEndMinute)
-        defaults.set(notificationsEnabled, forKey: UserDefaultsKeys.notificationsEnabled)
-        defaults.set(notificationHour, forKey: UserDefaultsKeys.notificationHour)
-        defaults.set(notificationMinute, forKey: UserDefaultsKeys.notificationMinute)
-        defaults.set(defaultShowWorkingDays, forKey: UserDefaultsKeys.defaultShowWorkingDays)
+        repository.save(
+            retireeName: retireeName,
+            subtitleMessage: subtitleMessage,
+            celebrationTitle: celebrationTitle,
+            startDate: startDate,
+            retirementDate: retirementDate,
+            retirementTimeZone: retirementTimeZone,
+            workDayEndHour: workDayEndHour,
+            workDayEndMinute: workDayEndMinute,
+            notificationsEnabled: notificationsEnabled,
+            notificationHour: notificationHour,
+            notificationMinute: notificationMinute,
+            defaultShowWorkingDays: defaultShowWorkingDays
+        )
     }
-    
+
     private func loadFromUserDefaults() {
-        let defaults = UserDefaults.standard
-        
-        if let savedName = defaults.object(forKey: UserDefaultsKeys.retireeName) as? String {
-            retireeName = savedName
-        }
-        
-        if let savedSubtitle = defaults.object(forKey: UserDefaultsKeys.subtitleMessage) as? String {
-            subtitleMessage = savedSubtitle
-        }
-        
-        if let savedCelebration = defaults.object(forKey: UserDefaultsKeys.celebrationTitle) as? String {
-            celebrationTitle = savedCelebration
-        }
-        
-        if let savedStartDate = defaults.object(forKey: UserDefaultsKeys.startDate) as? Date {
-            startDate = savedStartDate
-        }
-        
-        if let savedDate = defaults.object(forKey: UserDefaultsKeys.retirementDate) as? Date {
-            retirementDate = savedDate
-        }
-        
-        if let savedTimeZoneId = defaults.object(forKey: UserDefaultsKeys.retirementTimeZone) as? String,
-           let timeZone = TimeZone(identifier: savedTimeZoneId) {
-            retirementTimeZone = timeZone
-        }
-        
-        if defaults.object(forKey: UserDefaultsKeys.workDayEndHour) != nil {
-            workDayEndHour = defaults.integer(forKey: UserDefaultsKeys.workDayEndHour)
-        }
-        
-        if defaults.object(forKey: UserDefaultsKeys.workDayEndMinute) != nil {
-            workDayEndMinute = defaults.integer(forKey: UserDefaultsKeys.workDayEndMinute)
-        }
-        
-        if defaults.object(forKey: UserDefaultsKeys.notificationsEnabled) != nil {
-            notificationsEnabled = defaults.bool(forKey: UserDefaultsKeys.notificationsEnabled)
-        }
-        
-        if defaults.object(forKey: UserDefaultsKeys.notificationHour) != nil {
-            notificationHour = defaults.integer(forKey: UserDefaultsKeys.notificationHour)
-        }
-        
-        if defaults.object(forKey: UserDefaultsKeys.notificationMinute) != nil {
-            notificationMinute = defaults.integer(forKey: UserDefaultsKeys.notificationMinute)
-        }
-        
-        if defaults.object(forKey: UserDefaultsKeys.defaultShowWorkingDays) != nil {
-            defaultShowWorkingDays = defaults.bool(forKey: UserDefaultsKeys.defaultShowWorkingDays)
-        }
+        if let v = repository.retireeName { retireeName = v }
+        if let v = repository.subtitleMessage { subtitleMessage = v }
+        if let v = repository.celebrationTitle { celebrationTitle = v }
+        if let v = repository.startDate { startDate = v }
+        if let v = repository.retirementDate { retirementDate = v }
+        if let v = repository.retirementTimeZone { retirementTimeZone = v }
+        if let v = repository.workDayEndHour { workDayEndHour = v }
+        if let v = repository.workDayEndMinute { workDayEndMinute = v }
+        if let v = repository.notificationsEnabled { notificationsEnabled = v }
+        if let v = repository.notificationHour { notificationHour = v }
+        if let v = repository.notificationMinute { notificationMinute = v }
+        if let v = repository.defaultShowWorkingDays { defaultShowWorkingDays = v }
     }
     
     // MARK: - Reset to Defaults
@@ -317,30 +270,9 @@ class UserSettings: ObservableObject {
         
         // Reset to user's current timezone for better localization
         retirementTimeZone = TimeZone.current
-        
-        // Smart default start date: 5 years ago from today
-        let currentDate = Date()
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: currentDate)
-        
-        var startComponents = DateComponents()
-        startComponents.year = currentYear - 5
-        startComponents.month = 1
-        startComponents.day = 1
-        startComponents.hour = 8
-        startComponents.minute = 0
-        startComponents.timeZone = retirementTimeZone
-        startDate = Calendar.current.date(from: startComponents) ?? Date()
-        
-        // Smart default retirement date: 30 years from career start (typical career length)
-        var retirementComponents = DateComponents()
-        retirementComponents.year = (currentYear - 5) + 30  // 30-year career from start
-        retirementComponents.month = 12
-        retirementComponents.day = 31
-        retirementComponents.hour = 17
-        retirementComponents.minute = 0
-        retirementComponents.timeZone = retirementTimeZone
-        retirementDate = Calendar.current.date(from: retirementComponents) ?? Date()
+        let dates = Self.defaultDates(timezone: retirementTimeZone)
+        startDate = dates.start
+        retirementDate = dates.retirement
         
         workDayEndHour = 17
         workDayEndMinute = 0
