@@ -61,8 +61,8 @@ struct WorkingDaysCalculator {
             return false
         }
         
-        // Check if it's a federal holiday
-        if HolidayCalculator.isFederalHoliday(date) {
+        // Check if it's a holiday
+        if HolidayManager.shared.isHoliday(date) {
             return false
         }
         

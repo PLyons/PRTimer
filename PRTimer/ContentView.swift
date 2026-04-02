@@ -11,6 +11,7 @@
             @EnvironmentObject var userSettings: UserSettings
             @StateObject private var colorTheme = ColorThemeManager()
             @EnvironmentObject var notificationManager: NotificationManager
+            @EnvironmentObject var holidayManager: HolidayManager
             @Environment(\.scenePhase) private var scenePhase
 
             @State private var showingSettings = false
@@ -88,6 +89,7 @@
                         .environmentObject(userSettings)
                         .environmentObject(colorTheme)
                         .environmentObject(notificationManager)
+                        .environmentObject(holidayManager)
                 }
             }
         }
@@ -96,4 +98,5 @@
             ContentView()
                 .environmentObject(UserSettings.shared)
                 .environmentObject(NotificationManager.shared)
+                .environmentObject(HolidayManager.shared)
         }

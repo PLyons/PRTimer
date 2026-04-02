@@ -11,6 +11,7 @@ struct SettingsView: View {
     @EnvironmentObject var userSettings: UserSettings
     @EnvironmentObject var colorTheme: ColorThemeManager
     @EnvironmentObject var notificationManager: NotificationManager
+    @EnvironmentObject var holidayManager: HolidayManager
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -25,7 +26,12 @@ struct SettingsView: View {
                     .tabItem {
                         Label("Date & Time", systemImage: "calendar.circle")
                     }
-                
+
+                HolidaysSettingsView()
+                    .tabItem {
+                        Label("Holidays", systemImage: "calendar.badge.checkmark")
+                    }
+
                 NotificationSettingsView()
                     .tabItem {
                         Label("Notifications", systemImage: "bell.circle")
@@ -310,4 +316,5 @@ struct FeatureRow: View {
         .environmentObject(UserSettings.shared)
         .environmentObject(ColorThemeManager())
         .environmentObject(NotificationManager.shared)
+        .environmentObject(HolidayManager.shared)
 }
